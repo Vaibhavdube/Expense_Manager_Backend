@@ -1,48 +1,62 @@
 package in.vaibhav.moneymanager.service;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
-    @RequiredArgsConstructor
-    public class EmailService {
+@RequiredArgsConstructor
+public class EmailService {
 
-    //dependency used
-    private final JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String apiKey;
 
-    @Value("${spring.mail.properties.mail.smtp.from}")
+    @Value("${brevo.from.email}")
     private String fromEmail;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     public void sendEmail(String to, String subject, String body) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
 
-            message.setFrom(fromEmail);
+        String url = "https://api.brevo.com/v3/smtp/email";
 
-            message.setTo(to);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("accept", "application/json");
+        headers.set("api-key", apiKey);
 
-            message.setSubject(subject);
+        Map<String, Object> requestBody = Map.of(
+                "sender", Map.of(
+                        "name", "Expense Manager",
+                        "email", fromEmail
+                ),
+                "to", List.of(
+                        Map.of(
+                                "email", to
+                        )
+                ),
+                "subject", subject,
+                "htmlContent", body
+        );
 
-            message.setText(body);
+        HttpEntity<Map<String, Object>> entity =
+                new HttpEntity<>(requestBody, headers);
 
-            mailSender.send(message);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Failed to send email : " + response.getBody());
         }
     }
 }
-
-//From: yourapp@gmail.com
-// To: abc@gmail.com
-// Subject: Verify Account
-//
-// Click here to verify:
-// http://localhost:8080/verify?token=abc123
-//
-//
-//     //now call this service method in ProfileService(parent service )service
 
