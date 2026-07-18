@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
     //dependency used
     private final JavaMailSender mailSender;
 
-    @Value("${MAIL_USERNAME}")
+    @Value("${spring.mail.properties.mail.smtp.from}")
     private String fromEmail;
 
     public void sendEmail(String to, String subject, String body) {
