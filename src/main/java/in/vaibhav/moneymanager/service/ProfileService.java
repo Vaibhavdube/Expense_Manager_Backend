@@ -34,27 +34,39 @@ public class ProfileService {
 
     //ek method banaya type ProfileDto hai issa ProfileDTo ka object milega
     public ProfileDTO registerProfile(ProfileDTO profileDTO) {
-        //dto--->entity conversion
+
+        if (profileRepository.findByEmail(profileDTO.getEmail()).isPresent()) {
+            throw new RuntimeException("User already exists with this email.");
+        }
+
         ProfileEntity newProfile = toEntity(profileDTO);
-        //random token genreration
+
         newProfile.setActivationToken(UUID.randomUUID().toString());
-        //jo entity banayi usko DB mein save kerdiya save in DB
-        //before save to DB be encode password through passwordEncoder.encode()
-        ;
+
         newProfile = profileRepository.save(newProfile);
-//DB mein entity save hona ka baad mtlb sign up check hona ka baad generate activation link
-        //Activation email
-        String activationLink =activationURL+
-                "/api/v2.0/activate?token="
+
+        String activationLink =
+                activationURL + "/api/v2.0/activate?token="
                         + newProfile.getActivationToken();
 
-        String subject = "Tu nhi toh kon bey";
+        String subject = "Verify your Email";
 
-        String body =
-                "Click below to activate your account:\n\n"
-                        + activationLink;
-        emailService.sendEmail(newProfile.getEmail(), subject, body);
-        //aab client ko entity nhi DTO bhej
+        String body = """
+            Welcome to Expense Manager.
+
+            Please click the link below to verify your email.
+
+            %s
+
+            If you did not register, ignore this email.
+            """.formatted(activationLink);
+
+        emailService.sendEmail(
+                newProfile.getEmail(),
+                subject,
+                body
+        );
+
         return toDTO(newProfile);
     }
 
@@ -85,21 +97,32 @@ public class ProfileService {
     }
 
     public boolean activateProfile(String activationToken) {
-        return profileRepository.findByActivationToken(activationToken)
+
+        return profileRepository
+                .findByActivationToken(activationToken)
                 .map(profile -> {
+
                     profile.setIsActive(true);
+
+                    profile.setActivationToken(null);
+
                     profileRepository.save(profile);
+
                     return true;
-                })
-                .orElse(false);
+
+                }).orElse(false);
     }
 
     //kya user kaaccount deactivate toh nhi
     public Boolean isAccountActive(String email) {
 
-        return profileRepository.findByEmail(email)
-                .map(ProfileEntity::getIsActive)
-                .orElse(false);
+        ProfileEntity profile =
+                profileRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new RuntimeException("User not found"));
+
+        return profile.getIsActive();
     }
 
     /// / JWT authenticated request ke baad  (jwt filter jab use hoga)

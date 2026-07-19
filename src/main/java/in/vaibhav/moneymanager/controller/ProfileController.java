@@ -1,14 +1,12 @@
 package in.vaibhav.moneymanager.controller;
 
-
 import in.vaibhav.moneymanager.dto.AuthDTO;
 import in.vaibhav.moneymanager.dto.ProfileDTO;
 import in.vaibhav.moneymanager.service.ProfileService;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.Token;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
 
 import java.util.Map;
 
@@ -16,59 +14,86 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProfileController {
 
-
     private final ProfileService profileService;
 
     @PostMapping("/register")
-    public ResponseEntity<ProfileDTO> registerProfile(@RequestBody ProfileDTO profileDTO) {
-        ProfileDTO registeredProfile = profileService.registerProfile(profileDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(registeredProfile);
-    }
-
-    @GetMapping("/activate")
-    public ResponseEntity<String> activateProfile(@RequestParam String token) {
-        boolean isActivated = profileService.activateProfile(token);
-        if (isActivated) {
-          return   ResponseEntity.ok("Profile Activated successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Activation Token not found or already used");
-        }
-
-
-
-        }
-
-
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody AuthDTO authDTO) {
+    public ResponseEntity<?> registerProfile(
+            @RequestBody ProfileDTO profileDTO) {
 
         try {
 
-            // account active check
+            ProfileDTO registered =
+                    profileService.registerProfile(profileDTO);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(
+                            Map.of(
+                                    "message",
+                                    "Registration successful. Please verify your email.",
+                                    "user",
+                                    registered
+                            )
+                    );
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            )
+                    );
+        }
+    }
+
+    @GetMapping("/activate")
+    public ResponseEntity<String> activateProfile(
+            @RequestParam String token) {
+
+        boolean activated =
+                profileService.activateProfile(token);
+
+        if (activated) {
+
+            return ResponseEntity.ok(
+                    "Email verified successfully. Please login."
+            );
+
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Invalid or expired activation link.");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            @RequestBody AuthDTO authDTO) {
+
+        try {
+
             if (!profileService.isAccountActive(
-                    authDTO.getEmail()
-            )) {
+                    authDTO.getEmail())) {
 
                 return ResponseEntity
                         .status(HttpStatus.FORBIDDEN)
                         .body(
                                 Map.of(
                                         "message",
-                                        "Account is not active. Please activate your account first"
+                                        "Please verify your email first."
                                 )
                         );
             }
 
-            // authenticate + generate jwt
             Map<String, Object> response =
-                    profileService
-                            .authenticateAndGenerateToken(
-                                    authDTO
-                            );
+                    profileService.authenticateAndGenerateToken(authDTO);
 
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
 
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -82,17 +107,9 @@ public class ProfileController {
     }
 
     @GetMapping("/test")
-    public String test()
-    {
+    public String test() {
         return "test success";
     }
 }
-
-
-
-
-
-
-
 
 
