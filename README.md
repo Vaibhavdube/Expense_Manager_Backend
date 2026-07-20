@@ -57,19 +57,22 @@ Expense Manager Backend is a secure and scalable REST API that helps users manag
 
 ## Login API
 
-![Login API](Screenshot 2026-07-20 201618.png)
+![Login API](https://github.com/Vaibhavdube/Expense_Manager_Backend/blob/master/Screenshot%202026-07-20%20201618.png)
 
 ---
 
 ## Email Verification
 
-![Email](https://github.com/Vaibhavdube/Expense_Manager_Backend/blob/master/Screenshot%202026-07-20%20201618.png)
+![Email](https://github.com/Vaibhavdube/Expense_Manager_Backend/blob/master/Screenshot%202026-07-20%20202409.png)
 
 ---
 
 ## PostgreSQL Database
 
-![Database](images/database.png)
+![Database](https://github.com/Vaibhavdube/Expense_Manager_Backend/blob/master/Screenshot%202026-07-20%20201425.png)
+
+## Backend IntelliJ
+![Backend](https://github.com/Vaibhavdube/Expense_Manager_Backend/blob/master/Screenshot%202026-07-20%20201739.png)
 
 ---
 
