@@ -6,7 +6,6 @@
 
 Built with **Java 21**, **Spring Boot**, **Spring Security**, **JWT**, **PostgreSQL**, and **Hibernate**
 
-
 ---
 
 # 🌐 Live Demo
